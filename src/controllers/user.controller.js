@@ -87,18 +87,14 @@ const registerUser = asyncHandler(async (req, res) => {
 const loginUser = asyncHandler(async (req, res) => {
 
     // get data from req body
-    // username or email
-    // find user
-    // password check
-    // accessToken and refreshToken
-    // send cookie
-
     const { email, username, password } = req.body
 
+    // username or email
     if (!(email || username)) {
         throw new ApiError(400, "username or email is required")
     }
 
+    // find user
     const user = await User.findOne({
         $or: [{ username }, { email }]
     })
@@ -107,12 +103,14 @@ const loginUser = asyncHandler(async (req, res) => {
         throw new ApiError(404, "User does not exist")
     }
 
+    // password check
     const isPasswordValid = await user.isPasswordCorrect(password)
 
     if (!isPasswordValid) {
         throw new ApiError(401, "Password incorrect")
     }
 
+    // accessToken and refreshToken
     const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id)
 
     const loggedInUser = await User.findById(user._id).select("-password -refreshToken")
@@ -122,6 +120,7 @@ const loginUser = asyncHandler(async (req, res) => {
         secure: true
     }
 
+    // send cookie
     return res.status(200).cookie("accessToken", accessToken, options).cookie("refreshToken", refreshToken, options).json(
         new ApiResponse(200, {
             user: loggedInUser, accessToken, refreshToken
