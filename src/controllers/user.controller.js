@@ -193,7 +193,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 const changeCurrentPassword = asyncHandler(async (req, res) => {
     const { oldPassword, newPassword } = req.body
 
-    const user = await User.findById(req.user?.id)
+    const user = await User.findById(req.user?._id)
     const isPasswordCorrect = await user.isPasswordCorrect(oldPassword)
 
     if (!isPasswordCorrect) {
@@ -224,14 +224,21 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
     }
 
     const user = await User.findByIdAndUpdate(
-        req.user?.id,
+        req.user?._id,
         {
-
+            $set: {
+                fullName,
+                email
+            }
         },
         {
             new: true
         }
     ).select("-password")
+
+    return res.status(200).json(
+        new ApiResponse(200, user, "Account details updated successfully")
+    )
 })
 
 
